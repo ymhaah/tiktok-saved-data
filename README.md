@@ -11,6 +11,8 @@ The app uses a lightweight React setup with dynamic imports to split large datas
 > **And yes… my videos are publicly available in this demo.
 > Enjoy judging my taste in content — I accept no responsibility for your reactions.**
 
+[live link](https://taupe-salamander-fd248c.netlify.app/)
+
 ---
 
 ## **Screenshot**
