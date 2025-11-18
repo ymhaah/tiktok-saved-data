@@ -38,6 +38,8 @@ type dataT =
       }[]
     | null;
 
+const allJsonImports = import.meta.glob("./data/*.json");
+
 export default function App() {
     const [videoType, setVideoType] = useState<videoTypeT>("liked");
     const videoOptions: videoTypeT[] = [
@@ -58,55 +60,89 @@ export default function App() {
 
     const [data, setData] = useState<dataT>(null);
 
-    const fetchData = async (page: number) => {
-        setData(null);
-        let filePath: string | null = null;
-
-        switch (videoType) {
-            case "liked":
-                filePath = `./data/liked_part_${page}.json`;
-                break;
-            case "books":
-                filePath = `./data/savedBooks.json`;
-                break;
-            case "design":
-                filePath = `./data/savedDesign.json`;
-                break;
-            case "dev":
-                filePath = `./data/savedDev.json`;
-                break;
-            case "games":
-                filePath = `./data/savedGames.json`;
-                break;
-            case "goggins":
-                filePath = `./data/savedGoggins.json`;
-                break;
-            case "jobs":
-                filePath = `./data/savedJobs.json`;
-                break;
-            case "movies":
-                filePath = `./data/savedMovies.json`;
-                break;
-            case "quran":
-                filePath = `./data/savedQuran.json`;
-                break;
-            default:
-                filePath = `./data/liked_part_${page}.json`;
+    const getFileName = (type: videoTypeT, page: number) => {
+        if (type === "liked") {
+            return `liked_part_${page}.json`;
         }
+        const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
+        return `saved${capitalizedType}.json`;
+    };
+    const fetchData = async () => {
+        setData(null);
 
+        const fileName = getFileName(videoType, currentPage);
+        const filePath = `./data/${fileName}`;
+
+        const importFunction = allJsonImports[filePath];
+
+        if (!importFunction) {
+            console.error(`لم يتم العثور على مسار الاستيراد لـ: ${filePath}`);
+            setData([]);
+            return;
+        }
         try {
-            if (filePath) {
-                const module = await import(filePath);
-                setData(module.default);
-            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const module: any = await importFunction();
+
+            const importedData: dataT = module.default;
+
+            setData(importedData);
         } catch (error) {
             console.error(error);
-            setData(null);
+            setData([]);
         }
     };
 
+    // const fetchData = async (page: number) => {
+    //     setData(null);
+    //     let filePath: string | null = null;
+
+    //     switch (videoType) {
+    //         case "liked":
+    //             filePath = `./data/liked_part_${page}.json`;
+    //             break;
+    //         case "books":
+    //             filePath = `./data/savedBooks.json`;
+    //             break;
+    //         case "design":
+    //             filePath = `./data/savedDesign.json`;
+    //             break;
+    //         case "dev":
+    //             filePath = `./data/savedDev.json`;
+    //             break;
+    //         case "games":
+    //             filePath = `./data/savedGames.json`;
+    //             break;
+    //         case "goggins":
+    //             filePath = `./data/savedGoggins.json`;
+    //             break;
+    //         case "jobs":
+    //             filePath = `./data/savedJobs.json`;
+    //             break;
+    //         case "movies":
+    //             filePath = `./data/savedMovies.json`;
+    //             break;
+    //         case "quran":
+    //             filePath = `./data/savedQuran.json`;
+    //             break;
+    //         default:
+    //             filePath = `./data/liked_part_${page}.json`;
+    //     }
+
+    //     try {
+    //         if (filePath) {
+    //             const module = await import(filePath);
+    //             setData(module.default);
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //         setData(null);
+    //     }
+    // };
+
     useEffect(() => {
-        fetchData(currentPage);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchData();
     }, [currentPage, videoType]);
 
     const handlePageChange = (pageNumber: number) => {
